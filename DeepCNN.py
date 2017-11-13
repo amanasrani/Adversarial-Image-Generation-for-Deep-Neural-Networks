@@ -1,3 +1,7 @@
+
+
+
+
 from __future__ import print_function
 from __future__ import division
 from TestMatFiles import X_Test, X_Train, Y_Train, Y_Test
@@ -6,7 +10,7 @@ import tensorflow as tf
 
 mini_batch = 150
 Learning_rate = 0.5
-Steps = 5000
+Steps = 1000
 
 
 def error(computed_labels, actual_label):
@@ -16,7 +20,7 @@ def error(computed_labels, actual_label):
     return 1 - precision
 
 def weightsMatrix(size):
-    w = tf.Variable(tf.truncated_normal(size), dtype=tf.float32)
+    w = tf.Variable(tf.truncated_normal(size, stddev=0.09), dtype=tf.float32)
     print(size)
     return w
 
@@ -80,11 +84,14 @@ with g_first.as_default():
 
     #Need to add dropout here..............Later
 
+    prob_of_dropout = tf.placeholder(tf.float32)
+    Relu_W1Xb1_After_Dropout = tf.nn.dropout(Relu_W1Xb1, keep_prob=prob_of_dropout)
+
 
     w2 = weightsMatrix([2048, 10])  # Final Layer has 10 classes....
     b2 = biasMatrix(10)
 
-    W2Xb2 = tf.matmul(Relu_W1Xb1, w2) + b2
+    W2Xb2 = tf.matmul(Relu_W1Xb1_After_Dropout, w2) + b2
 
     LossFunc = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=W2Xb2, labels=tf_Y_Train))
 
@@ -111,13 +118,13 @@ with tf.Session(graph=g_first) as sess:
         #batch_labels = Y_Train[:, :]  # simple gradient descent......
 
 
-        sess.run(train_step, feed_dict={tf_X_Train: batch_data , tf_Y_Train : batch_labels})
+        sess.run(train_step, feed_dict={tf_X_Train: batch_data , tf_Y_Train : batch_labels, prob_of_dropout: 0.6})
 
 
 
         #print("Accuracy Follows>>>>>>>>>>>>>>>>>>")
         #print(accuracy_)
-    Y_Prediction = sess.run(W2Xb2, feed_dict={tf_X_Train: batch_data , tf_Y_Train : batch_labels})
+    Y_Prediction = sess.run(W2Xb2, feed_dict={tf_X_Train: batch_data , tf_Y_Train : batch_labels, prob_of_dropout:1.0})
 
 
     Training_Error = error(Y_Prediction, batch_labels)
@@ -126,7 +133,7 @@ with tf.Session(graph=g_first) as sess:
     # Code for testing.......................
 
 
-    Y_Prediction = sess.run(W2Xb2, feed_dict={tf_X_Train: X_Test[:, :], tf_Y_Train: Y_Test[:,:]})
+    Y_Prediction = sess.run(W2Xb2, feed_dict={tf_X_Train: X_Test[:, :], tf_Y_Train: Y_Test[:,:], prob_of_dropout:1.0})
     Testing_Error = error(Y_Prediction, Y_Test)
     print("Testing Error at step %d, %f" % (i, Testing_Error))
 
