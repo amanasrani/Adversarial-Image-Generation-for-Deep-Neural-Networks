@@ -8,6 +8,9 @@ from CNN_Output import Convolution, Subsampling, weightsMatrix, biasMatrix, prop
 def l2_cost(x, y):
 	return (x-y)**2
 
+def l1_cost(x, y):
+	return np.absolute(x-y)
+
 def normalize(yk, y):
 	return (yk-np.mean(y))/(np.amax(y) - np.amin(y))
 
