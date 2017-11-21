@@ -1,7 +1,7 @@
 from __future__ import division
 import numpy as np
 import scipy.io
-import bigfloat
+
 from TestMatFiles import X_Test, X_Train, Y_Test, Y_Train, Beta, Theta
 
 def l2_cost(x, y):
@@ -10,18 +10,21 @@ def l2_cost(x, y):
 def l1_cost(x, y):
 	return np.absolute(x-y)
 
-def normalize(yk, y):
-	return (yk-np.mean(y))/(np.amax(y) - np.amin(y))
+def normalize(y):
+	#return (yk-np.mean(y))/(np.amax(y) - np.amin(y))
+	return (y-np.mean(y))/(np.amax(y) - np.amin(y))
 
 def rerank(y, target):
 	alpha = 2
-	k = np.argmax(y)
-	if(k == target):
-		return normalize(alpha*np.amax(y), y)
-	return normalize(y[k], y)
+	y[target] = alpha*np.amax(y)
+	return normalize(y)
+	#k = np.argmax(y)
+	#if(k == target):
+	#	return normalize(alpha*np.amax(y), y)
+	#return normalize(y[k], y)
 
 def sigmoid(z):
-    g = 1.0 /(1.0 + bigfloat.exp(-z))
+    g = 1.0 /(1.0 + np.exp(-z))
     return g
 
 def propagate(X):
@@ -59,10 +62,12 @@ target = 1
 learning_rate = 0.5
 atn_tuning_parameter = 0.2
 
+X_Train = normalize(X_Train)
 for p in range(NumberOfIterations):
 	h = np.dot(X_Train, B)
 	g = np.dot(h, T)
 	# g is perturbed input
+	g = normalize(g)
 	f, fh = propagate(g)
 	y, yh = propagate(X_Train)
 	# f is the prediction on the perturbed input.
@@ -83,18 +88,17 @@ for p in range(NumberOfIterations):
 
 	B = B + learning_rate * (np.dot(delta_Hidden.T, X_Train)/X_Train.shape[0]).T
 
-
 hidden_perturbed = np.dot(X_Train, B)
 output_perturbed = np.dot(hidden_perturbed, T)
 
 X_Perturbed = np.tanh(X_Train+output_perturbed)
 
-Y_Perturbed = propagate(X_Perturbed)
+Y_Perturbed, Y_Hidden = propagate(X_Perturbed)
 
 I = np.argmax(Y_Perturbed, axis= 1)
 I_ = np.argmax(Y_Train, axis=1)
 
 A = (I == I_)
 NumberOfCorrectSamples = np.sum(A)
-TrainingError[p] = 1 - (NumberOfCorrectSamples/X_Train.shape[0])
-print(p)
+TrainingError = 1 - (NumberOfCorrectSamples/X_Train.shape[0])
+print(TrainingError)
