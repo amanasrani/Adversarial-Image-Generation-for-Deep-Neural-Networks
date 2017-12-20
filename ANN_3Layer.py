@@ -10,11 +10,6 @@ def sigmoid(z):
     return g
 
 
-def relu(a):
-    b = a > 0
-    a = a * b
-    return a
-
 
 NumberOfClasses = 10
 NumberOfIterations = 1
